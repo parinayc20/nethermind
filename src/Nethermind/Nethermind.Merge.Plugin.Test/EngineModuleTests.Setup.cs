@@ -50,7 +50,7 @@ namespace Nethermind.Merge.Plugin.Test
         private IEngineRpcModule CreateEngineModule(MergeTestBlockchain chain)
         {
             PayloadStorage? payloadStorage = new(chain.IdealBlockProductionContext, chain.EmptyBlockProductionContext, new InitConfig(), chain.LogManager);
-            PayloadService payloadService = new(chain.IdealBlockProductionContext, chain.EmptyBlockProductionContext, new InitConfig(), chain.SealEngine, chain.LogManager);
+            PayloadService payloadService = new(new Eth2BlockBuilder(chain.IdealBlockProductionContext), new Eth2BlockBuilder(chain.EmptyBlockProductionContext), chain.IdealBlockProductionContext, new InitConfig(), chain.SealEngine, chain.LogManager);
 
             return new EngineRpcModule(
                 new PreparePayloadHandler(chain.BlockTree, payloadStorage, chain.Timestamper, chain.SealEngine, chain.LogManager),
