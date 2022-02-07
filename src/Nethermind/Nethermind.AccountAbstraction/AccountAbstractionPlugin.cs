@@ -38,7 +38,7 @@ namespace Nethermind.AccountAbstraction
         private ILogger _logger = null!;
 
         private INethermindApi _nethermindApi = null!;
-        private IEnumerable<Address> _entryPointContractAddresses = new List<Address>();
+        private IList<Address> _entryPointContractAddresses = new List<Address>();
         private IDictionary<Address, UserOperationPool> _userOperationPools = new Dictionary<Address, UserOperationPool>(); // EntryPoint Address -> Pool
         private IDictionary<Address, UserOperationSimulator> _userOperationSimulators = new Dictionary<Address, UserOperationSimulator>();
         private IDictionary<Address, UserOperationTxBuilder> _userOperationTxBuilders = new Dictionary<Address, UserOperationTxBuilder>();
@@ -209,17 +209,34 @@ namespace Nethermind.AccountAbstraction
 
             if (_accountAbstractionConfig.Enabled)
             {
-                bool parsed = Address.TryParse(
-                    _accountAbstractionConfig.EntryPointContractAddress,
-                    out Address? entryPointContractAddress);
-                if (!parsed)
-                {
-                    if (_logger.IsError) _logger.Error("Account Abstraction Plugin: EntryPoint contract address could not be parsed");
-                }
-                else
-                {
-                    if (_logger.IsInfo) _logger.Info($"Parsed EntryPoint Address: {entryPointContractAddress}");
-                    _entryPointContractAddress = entryPointContractAddress!;
+
+                // bool parsed = Address.TryParse(
+                //     _accountAbstractionConfig.EntryPointContractAddress,
+                //     out Address? entryPointContractAddress);
+                // if (!parsed)
+                // {
+                //     if (_logger.IsError) _logger.Error("Account Abstraction Plugin: EntryPoint contract address could not be parsed");
+                // }
+                // else
+                // {
+                //     if (_logger.IsInfo) _logger.Info($"Parsed EntryPoint Address: {entryPointContractAddress}");
+                //     _entryPointContractAddress = entryPointContractAddress!;
+                // }
+
+                IList<string> _entryPointContractAddressesString = _accountAbstractionConfig.EntryPointContractAddresses;
+                foreach (string _addressString in _entryPointContractAddressesString){
+                    bool parsed = Address.TryParse(
+                        _addressString,
+                        out Address? entryPointContractAddress);
+                    if (!parsed)
+                    {
+                        if (_logger.IsError) _logger.Error("Account Abstraction Plugin: EntryPoint contract address could not be parsed");
+                    }
+                    else
+                    {
+                        if (_logger.IsInfo) _logger.Info($"Parsed EntryPoint Address: {entryPointContractAddress}");
+                        _entryPointContractAddresses.Add(entryPointContractAddress!);
+                    }
                 }
 
                 bool parsedCreate2Factory = Address.TryParse(
@@ -292,7 +309,8 @@ namespace Nethermind.AccountAbstraction
                 IJsonRpcConfig rpcConfig = getFromApi.Config<IJsonRpcConfig>();
                 rpcConfig.EnableModules(ModuleType.AccountAbstraction);
 
-                AccountAbstractionModuleFactory accountAbstractionModuleFactory = new(UserOperationPool, new[] {_entryPointContractAddress});
+                // AccountAbstractionModuleFactory accountAbstractionModuleFactory = new(UserOperationPool, new[] {_entryPointContractAddress});
+                AccountAbstractionModuleFactory accountAbstractionModuleFactory = new(UserOperationPool, _entryPointContractAddresses.ToArray());
 
                 getFromApi.RpcModuleProvider!.RegisterBoundedByCpuCount(accountAbstractionModuleFactory, rpcConfig.Timeout);
 
